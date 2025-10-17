@@ -1,0 +1,22 @@
+{
+    "app":{
+        "name":"app"
+    },
+    "web":{
+        "port":3000,
+        "prefork": false
+    },
+    "database": {
+    "username": "dev_golang",
+    "password": "1234",
+    "host": "localhost",
+    "port": 5432,
+    "name": "sistem06",
+    "pool": {
+      "idle": 10,
+      "max": 100,
+      "lifetime": 300
+    }
+  }
+
+}
