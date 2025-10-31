@@ -9,6 +9,7 @@ import (
 type RouteConfig struct {
 	App             *fiber.App
 	HelloController *http.HelloController
+	UserController  *http.UserController
 }
 
 func (c *RouteConfig) Setup() {
@@ -17,4 +18,5 @@ func (c *RouteConfig) Setup() {
 
 func (c *RouteConfig) SetupGuestRoute() {
 	c.App.Get("/hello", c.HelloController.Hello)
+	c.App.Post("/api/register", c.UserController.Register)
 }
