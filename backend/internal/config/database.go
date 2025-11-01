@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	_ "github.com/lib/pq"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
-func NewPostgres(config *viper.Viper) *sql.DB {
+func NewPostgres(config *viper.Viper, log *logrus.Logger) *sql.DB {
 	username := config.GetString("database.username")
 	password := config.GetString("database.password")
 	port := config.GetInt("database.port")
@@ -25,7 +27,7 @@ func NewPostgres(config *viper.Viper) *sql.DB {
 
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		return nil, fmt.Errorf("error opening database: %w", err)
+		log.Fatalf("failed to connect database: %v", err)
 	}
 
 	// Connection pool configuration
@@ -37,8 +39,8 @@ func NewPostgres(config *viper.Viper) *sql.DB {
 
 	// Test koneksi ke DB
 	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("failed to ping database: %w", err)
+		log.Fatalf("failed to ping database: %v", err)
 	}
 
-	return db, nil
+	return db
 }

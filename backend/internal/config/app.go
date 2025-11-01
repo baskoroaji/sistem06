@@ -24,7 +24,7 @@ type BootstrapConfig struct {
 func Bootstrap(config *BootstrapConfig) {
 	helloContoller := http.NewHelloController()
 
-	userRepository := repository.NewUserRepository(config.Log)
+	userRepository := repository.NewUserRepository(config.DB, config.Log)
 
 	userUseCase := usecase.NewUserUseCase(config.DB, config.Log, config.Validator, userRepository)
 

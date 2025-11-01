@@ -40,8 +40,11 @@ func (c *UserUseCase) Create(ctx context.Context, request *model.RegisterUserReq
 	defer tx.Rollback()
 
 	if err := c.validate.Struct(request); err != nil {
-		c.Log.Warnf("Invalid request body: %+v", err)
-		return nil, fiber.ErrBadRequest
+		validationErrors := validation.HumanizeErrors(err)
+		c.Log.Warnf("Validation failed: %+v", validationErrors)
+
+		// Return response error yang bisa dibaca frontend
+		return nil, fiber.NewError(fiber.StatusBadRequest, formatValidationErrors(validationErrors))
 	}
 
 	password, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
@@ -51,8 +54,8 @@ func (c *UserUseCase) Create(ctx context.Context, request *model.RegisterUserReq
 	}
 
 	user := &entity.UserEntity{
-		ID:       request.ID,
 		Name:     request.Name,
+		Email:    request.Email,
 		Password: string(password),
 	}
 

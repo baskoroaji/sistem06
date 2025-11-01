@@ -10,7 +10,7 @@ func main() {
 	viperConfig := config.NewViper()
 	app := config.NewFiber(viperConfig)
 	log := config.NewLogger(viperConfig)
-	db := config.NewPostgres(viperConfig)
+	db := config.NewPostgres(viperConfig, log)
 	validate := config.NewValidator(viperConfig)
 
 	config.Bootstrap(&config.BootstrapConfig{

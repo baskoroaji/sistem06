@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"backend-sistem06.com/internal/entity"
 	"github.com/sirupsen/logrus"
@@ -13,27 +14,36 @@ type UserRepository struct {
 	Log *logrus.Logger
 }
 
-func NewUserRepository(log *logrus.Logger) *UserRepository {
+func NewUserRepository(db *sql.DB, log *logrus.Logger) *UserRepository {
 	return &UserRepository{
+		DB:  db,
 		Log: log,
 	}
 }
 
 func (r *UserRepository) CreateUser(tx *sql.Tx, user *entity.UserEntity) error {
+	now := time.Now().Unix()
 	query := `
 		INSERT INTO users (name, email, password, created_at, updated_at)
-		VALUES ($1, $2, $3, NOW(), NOW())
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id
 	`
 
-	var lastInsertID int64
-	err := r.DB.QueryRow(query, user.Name, user.Email, user.Password).Scan(&lastInsertID)
+	var row *sql.Row
+
+	if tx != nil {
+		row = tx.QueryRow(query, user.Name, user.Email, user.Password, now, now)
+	} else {
+		row = r.DB.QueryRow(query, user.Name, user.Email, user.Password, now, now)
+	}
+
+	err := row.Scan(&user.ID)
 	if err != nil {
 		r.Log.Errorf("failed to create user: %v", err)
 		return fmt.Errorf("failed to create user: %w", err)
 	}
 
-	r.Log.Infof("user created successfully with ID: %d", lastInsertID)
+	r.Log.Infof("user created successfully with ID: %d", user.ID)
 	return nil
 }
 
