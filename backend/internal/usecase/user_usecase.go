@@ -9,6 +9,7 @@ import (
 	"backend-sistem06.com/internal/model"
 	"backend-sistem06.com/internal/model/converter"
 	"backend-sistem06.com/internal/repository"
+	"backend-sistem06.com/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
@@ -40,11 +41,11 @@ func (c *UserUseCase) Create(ctx context.Context, request *model.RegisterUserReq
 	defer tx.Rollback()
 
 	if err := c.validate.Struct(request); err != nil {
-		validationErrors := validation.HumanizeErrors(err)
+		validationErrors := utils.ValidationError(err)
 		c.Log.Warnf("Validation failed: %+v", validationErrors)
 
 		// Return response error yang bisa dibaca frontend
-		return nil, fiber.NewError(fiber.StatusBadRequest, formatValidationErrors(validationErrors))
+		return nil, fiber.NewError(fiber.StatusBadRequest, utils.FormatValidationErrors(validationErrors))
 	}
 
 	password, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)

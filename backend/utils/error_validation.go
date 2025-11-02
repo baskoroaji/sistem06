@@ -6,8 +6,15 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+var Messages = map[string]string{
+	"required": "%s is required",
+	"email":    "%s must be a valid email address",
+	"min":      "%s must be at least %s characters",
+	"max":      "%s must be at most %s characters",
+}
+
 func ValidationError(err error) map[string]string {
-	if err != nil {
+	if err == nil {
 		return nil
 	}
 	errors := make(map[string]string)
@@ -25,4 +32,16 @@ func ValidationError(err error) map[string]string {
 		}
 	}
 	return errors
+}
+
+func FormatValidationErrors(errs map[string]string) string {
+	msg := "{"
+	for field, err := range errs {
+		msg += fmt.Sprintf("\"%s\": \"%s\",", field, err)
+	}
+	if len(msg) > 1 {
+		msg = msg[:len(msg)-1]
+	}
+	msg += "}"
+	return msg
 }
