@@ -66,3 +66,24 @@ func (r *UserRepository) CountByName(tx *sql.Tx, name string) (int, error) {
 	err := tx.QueryRow(query, name).Scan(&totalName)
 	return totalName, err
 }
+
+func (r *UserRepository) FindByEmail(email string) (*entity.UserEntity, error) {
+	query :=
+		`
+	SELECT id, name, email, password, created_at, updated_at
+		FROM users
+		WHERE email = $1
+	`
+	row := r.DB.QueryRow(query, email)
+
+	var user entity.UserEntity
+	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, err
+	}
+
+	return &user, nil
+}
