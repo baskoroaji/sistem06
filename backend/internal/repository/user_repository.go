@@ -87,3 +87,24 @@ func (r *UserRepository) FindByEmail(email string) (*entity.UserEntity, error) {
 
 	return &user, nil
 }
+
+func (r *UserRepository) FindByID(id int) (*entity.UserEntity, error) {
+	query :=
+		`
+	SELECT id, name, email, password, created_at, updated_at
+		FROM users
+		WHERE id = $1
+	`
+	row := r.DB.QueryRow(query, id)
+
+	var user entity.UserEntity
+	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, err
+	}
+
+	return &user, nil
+}
