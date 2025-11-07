@@ -3,7 +3,9 @@ package usecase
 import (
 	"context"
 	"database/sql"
+	"time"
 
+	"backend-sistem06.com/internal/entity"
 	"backend-sistem06.com/internal/model"
 	"backend-sistem06.com/internal/repository"
 	"backend-sistem06.com/utils"
@@ -14,22 +16,24 @@ import (
 )
 
 type AuthUseCase struct {
-	DB             *sql.DB
-	Log            *logrus.Logger
-	Validate       *validator.Validate
-	UserRepository *repository.UserRepository
+	DB              *sql.DB
+	Log             *logrus.Logger
+	Validate        *validator.Validate
+	UserRepository  *repository.UserRepository
+	TokenRepository *repository.TokenRepository
 }
 
-func NewAuthUseCase(db *sql.DB, log *logrus.Logger, validate *validator.Validate, userRepository *repository.UserRepository) *AuthUseCase {
+func NewAuthUseCase(db *sql.DB, log *logrus.Logger, validate *validator.Validate, userRepository *repository.UserRepository, token *repository.TokenRepository) *AuthUseCase {
 	return &AuthUseCase{
-		DB:             db,
-		Log:            log,
-		Validate:       validate,
-		UserRepository: userRepository,
+		DB:              db,
+		Log:             log,
+		Validate:        validate,
+		UserRepository:  userRepository,
+		TokenRepository: token,
 	}
 }
 
-func (c *AuthUseCase) Login(ctx context.Context, request *model.LoginUserRequest) (*model.UserResponse, error) {
+func (c *AuthUseCase) Login(ctx context.Context, request *model.LoginUserRequest) (*model.LoginResponse, error) {
 
 	tx, err := c.DB.BeginTx(ctx, nil)
 	if err != nil {
@@ -44,6 +48,7 @@ func (c *AuthUseCase) Login(ctx context.Context, request *model.LoginUserRequest
 		c.Log.Warnf("Validation failed: %+v", validationErrors)
 
 		return nil, fiber.NewError(fiber.StatusBadRequest, utils.FormatValidationErrors(validationErrors))
+
 	}
 
 	user, err := c.UserRepository.FindByEmail(request.Email)
@@ -52,10 +57,33 @@ func (c *AuthUseCase) Login(ctx context.Context, request *model.LoginUserRequest
 		return nil, fiber.ErrUnauthorized
 	}
 
-	password, err := bcrypt.CompareHashAndPassword([]byte(request.Password), bcrypt.DefaultCost)
-	if err != nil {
-		c.Log.Warnf("failed to generate bcrypt hash: %+v", err)
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
+		c.Log.Warn("Invalid password")
+		return nil, fiber.ErrUnauthorized
+	}
+
+	tokenValue := utils.GenerateToken()
+	expiration := time.Now().Add(24 * time.Hour).Unix()
+
+	token := &entity.PersonalAccessToken{
+		UserID:    user.ID,
+		Token:     tokenValue,
+		CreatedAt: time.Now().Unix(),
+		ExpiredAt: expiration,
+	}
+	if err := c.TokenRepository.CreateToken(tx, token); err != nil {
+		c.Log.Warnf("Failed to create token: %+v", err)
 		return nil, fiber.ErrInternalServerError
 	}
 
+	if err := tx.Commit(); err != nil {
+		c.Log.Warnf("Failed to commit transaction: %+v", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	return &model.LoginResponse{
+		Token: token.Token,
+	}, nil
 }
+
+func (c *AuthUseCase) Verify(ctx *context.Context, request *model.VerifyUserRequest) *model

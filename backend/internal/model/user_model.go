@@ -16,3 +16,10 @@ type LoginUserRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=8 ,max=100"`
 }
+
+type LoginResponse struct {
+	Token string `json:"token,omitempty"`
+}
+type VerifyUserRequest struct {
+	Token string `validate:"required,max=100"`
+}
