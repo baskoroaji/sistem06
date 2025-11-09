@@ -35,7 +35,6 @@ func ValidationError(err error) map[string]string {
 		return errors
 	}
 
-	// Jika bukan validator error, kembalikan nil
 	return nil
 }
 
