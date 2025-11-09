@@ -17,9 +17,11 @@ func ValidationError(err error) map[string]string {
 	if err == nil {
 		return nil
 	}
-	errors := make(map[string]string)
-	if ValidationErr, ok := err.(validator.ValidationErrors); ok {
-		for _, fe := range ValidationErr {
+
+	// Cek apakah err adalah ValidationErrors
+	if validationErrs, ok := err.(validator.ValidationErrors); ok {
+		errors := make(map[string]string)
+		for _, fe := range validationErrs {
 			template := Messages[fe.Tag()]
 			if template == "" {
 				template = "%s is invalid"
@@ -30,8 +32,11 @@ func ValidationError(err error) map[string]string {
 				errors[fe.Field()] = fmt.Sprintf(template, fe.Field())
 			}
 		}
+		return errors
 	}
-	return errors
+
+	// Jika bukan validator error, kembalikan nil
+	return nil
 }
 
 func FormatValidationErrors(errs map[string]string) string {
