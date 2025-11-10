@@ -86,4 +86,25 @@ func (c *AuthUseCase) Login(ctx context.Context, request *model.LoginUserRequest
 	}, nil
 }
 
-func (c *AuthUseCase) Verify(ctx *context.Context, request *model.VerifyUserRequest) *model
+func (c *AuthUseCase) Verify(ctx *context.Context, tokenID int) (*model.Auth, error) {
+	token, err := c.TokenRepository.FindTokenById(tokenID)
+	if err != nil {
+		c.Log.Warnf("Failed to find token: %+v", err)
+		return nil, fiber.ErrUnauthorized
+	}
+
+	if time.Now().Unix() > token.ExpiredAt {
+		c.Log.Warn("Token expired")
+		return nil, fiber.ErrUnauthorized
+	}
+
+	user, err := c.UserRepository.FindByID(token.UserID)
+	if err != nil {
+		c.Log.Warnf("Failed to find user by token: %+v", err)
+		return nil, fiber.ErrUnauthorized
+	}
+
+	return &model.Auth{
+		ID: user.ID,
+	}, nil
+}

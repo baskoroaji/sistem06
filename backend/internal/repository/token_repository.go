@@ -25,9 +25,9 @@ func (r *TokenRepository) CreateToken(tx *sql.Tx, token *entity.PersonalAccessTo
 	now := time.Now().Unix()
 	query :=
 		`
-	INSERT INTO personal_access_token (user_id, personal_access_token, created_at, expired_at)
-	VALUES ($1, $2, $3, $4)
-	RETURNING id
+	INSERT INTO personal_access_token (user_id, token, created_at, expired_at)
+    VALUES ($1, $2, $3, $4)
+    RETURNING id
 	`
 
 	var row *sql.Row

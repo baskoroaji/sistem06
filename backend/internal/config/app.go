@@ -25,15 +25,19 @@ func Bootstrap(config *BootstrapConfig) {
 	helloContoller := http.NewHelloController()
 
 	userRepository := repository.NewUserRepository(config.DB, config.Log)
+	authRepository := repository.NewTokenRepository(config.DB, config.Log)
 
 	userUseCase := usecase.NewUserUseCase(config.DB, config.Log, config.Validator, userRepository)
+	authUseCase := usecase.NewAuthUseCase(config.DB, config.Log, config.Validator, userRepository, authRepository)
 
 	userController := http.NewUserController(userUseCase, config.Log)
+	authController := http.NewAuthController(authUseCase, config.Log)
 
 	routeConfig := route.RouteConfig{
 		App:             config.App,
 		HelloController: helloContoller,
 		UserController:  userController,
+		AuthController:  authController,
 	}
 	routeConfig.Setup()
 
