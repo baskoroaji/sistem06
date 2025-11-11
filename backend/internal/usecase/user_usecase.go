@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"strings"
 
 	"backend-sistem06.com/internal/entity"
@@ -35,6 +36,10 @@ func NewUserUseCase(db *sql.DB, log *logrus.Logger, validate *validator.Validate
 func (c *UserUseCase) Create(ctx context.Context, request *model.RegisterUserRequest) (*model.UserResponse, error) {
 	tx, err := c.DB.BeginTx(ctx, nil)
 	if err != nil {
+		if errors.Is(err, context.Canceled) {
+			c.Log.Warn("Request canceled by context")
+			return nil, fiber.NewError(fiber.StatusRequestTimeout, "request canceled")
+		}
 		c.Log.Warnf("Failed to begin transaction: %+v", err)
 		return nil, fiber.ErrInternalServerError
 	}
