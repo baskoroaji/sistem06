@@ -20,10 +20,10 @@ type UserUseCase struct {
 	DB             *sql.DB
 	Log            *logrus.Logger
 	validate       *validator.Validate
-	UserRepository *repository.UserRepository
+	UserRepository repository.UserRepositoryInterface
 }
 
-func NewUserUseCase(db *sql.DB, log *logrus.Logger, validate *validator.Validate, userRepository *repository.UserRepository) *UserUseCase {
+func NewUserUseCase(db *sql.DB, log *logrus.Logger, validate *validator.Validate, userRepository repository.UserRepositoryInterface) *UserUseCase {
 	return &UserUseCase{
 		DB:             db,
 		Log:            log,

@@ -9,6 +9,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type TokenRepositoryInterface interface {
+	CreateToken(tx *sql.Tx, token *entity.PersonalAccessToken) error
+	FindTokenById(id int) (*entity.PersonalAccessToken, error)
+}
 type TokenRepository struct {
 	DB  *sql.DB
 	Log *logrus.Logger

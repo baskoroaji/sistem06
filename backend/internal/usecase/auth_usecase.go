@@ -19,11 +19,11 @@ type AuthUseCase struct {
 	DB              *sql.DB
 	Log             *logrus.Logger
 	Validate        *validator.Validate
-	UserRepository  *repository.UserRepository
-	TokenRepository *repository.TokenRepository
+	UserRepository  repository.UserRepositoryInterface
+	TokenRepository repository.TokenRepositoryInterface
 }
 
-func NewAuthUseCase(db *sql.DB, log *logrus.Logger, validate *validator.Validate, userRepository *repository.UserRepository, token *repository.TokenRepository) *AuthUseCase {
+func NewAuthUseCase(db *sql.DB, log *logrus.Logger, validate *validator.Validate, userRepository repository.UserRepositoryInterface, token repository.TokenRepositoryInterface) *AuthUseCase {
 	return &AuthUseCase{
 		DB:              db,
 		Log:             log,

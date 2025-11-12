@@ -9,6 +9,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type UserRepositoryInterface interface {
+	CreateUser(tx *sql.Tx, user *entity.UserEntity) error
+	CountById(tx *sql.Tx, id int) (int, error)
+	CountByName(tx *sql.Tx, name string) (int, error)
+	FindByEmail(email string) (*entity.UserEntity, error)
+	FindByID(id int) (*entity.UserEntity, error)
+}
 type UserRepository struct {
 	DB  *sql.DB
 	Log *logrus.Logger
