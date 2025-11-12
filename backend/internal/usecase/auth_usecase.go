@@ -86,7 +86,7 @@ func (c *AuthUseCase) Login(ctx context.Context, request *model.LoginUserRequest
 	}, nil
 }
 
-func (c *AuthUseCase) Verify(ctx *context.Context, tokenID int) (*model.Auth, error) {
+func (c *AuthUseCase) Verify(ctx context.Context, tokenID int) (*model.Auth, error) {
 	token, err := c.TokenRepository.FindTokenById(tokenID)
 	if err != nil {
 		c.Log.Warnf("Failed to find token: %+v", err)

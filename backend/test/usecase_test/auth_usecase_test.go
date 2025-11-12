@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-playground/validator/v10"
@@ -616,4 +617,225 @@ func TestAuthUseCase_Login_ValidationScenarios(t *testing.T) {
 			assert.NoError(t, mock.ExpectationsWereMet())
 		})
 	}
+}
+
+func TestAuthUseCase_Verify(t *testing.T) {
+	t.Run("should successfully verify valid token", func(t *testing.T) {
+		uc, mock, cleanup := setupAuthUseCase(t, nil, nil)
+		defer cleanup()
+
+		tokenID := 1
+		userID := 123
+		futureExpiry := time.Now().Add(24 * time.Hour).Unix()
+
+		// Mock FindTokenById query
+		mock.ExpectQuery(`SELECT`).
+			WithArgs(tokenID).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "token", "created_at", "expired_at"}).
+				AddRow(tokenID, userID, "valid_token_string", time.Now().Unix(), futureExpiry))
+
+		// Mock FindByID query
+		mock.ExpectQuery(`SELECT`).
+			WithArgs(userID).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "password", "created_at", "updated_at"}).
+				AddRow(userID, "John Doe", "john@example.com", "hashed_password", 1234567890, 1234567890))
+
+		ctx := context.Background()
+		result, err := uc.Verify(ctx, tokenID)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, userID, result.ID)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("should return error when token not found", func(t *testing.T) {
+		uc, mock, cleanup := setupAuthUseCase(t, nil, nil)
+		defer cleanup()
+
+		tokenID := 999
+
+		// Mock FindTokenById query returning error
+		mock.ExpectQuery(`SELECT`).
+			WithArgs(tokenID).
+			WillReturnError(sql.ErrNoRows)
+
+		ctx := context.Background()
+		result, err := uc.Verify(ctx, tokenID)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Equal(t, fiber.ErrUnauthorized, err)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("should return error when token is expired", func(t *testing.T) {
+		uc, mock, cleanup := setupAuthUseCase(t, nil, nil)
+		defer cleanup()
+
+		tokenID := 1
+		userID := 123
+		pastExpiry := time.Now().Add(-1 * time.Hour).Unix() // Expired 1 hour ago
+
+		// Mock FindTokenById query with expired token
+		mock.ExpectQuery(`SELECT`).
+			WithArgs(tokenID).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "token", "created_at", "expired_at"}).
+				AddRow(tokenID, userID, "expired_token", time.Now().Unix(), pastExpiry))
+
+		ctx := context.Background()
+		result, err := uc.Verify(ctx, tokenID)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Equal(t, fiber.ErrUnauthorized, err)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("should return error when user not found", func(t *testing.T) {
+		uc, mock, cleanup := setupAuthUseCase(t, nil, nil)
+		defer cleanup()
+
+		tokenID := 1
+		userID := 999
+		futureExpiry := time.Now().Add(24 * time.Hour).Unix()
+
+		// Mock FindTokenById query
+		mock.ExpectQuery(`SELECT`).
+			WithArgs(tokenID).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "token", "created_at", "expired_at"}).
+				AddRow(tokenID, userID, "valid_token", time.Now().Unix(), futureExpiry))
+
+		// Mock FindByID query returning error
+		mock.ExpectQuery(`SELECT`).
+			WithArgs(userID).
+			WillReturnError(sql.ErrNoRows)
+
+		ctx := context.Background()
+		result, err := uc.Verify(ctx, tokenID)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Equal(t, fiber.ErrUnauthorized, err)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("should verify token at exact expiration boundary", func(t *testing.T) {
+		uc, mock, cleanup := setupAuthUseCase(t, nil, nil)
+		defer cleanup()
+
+		tokenID := 1
+		userID := 123
+		// Token expires in 1 second
+		almostExpired := time.Now().Add(1 * time.Second).Unix()
+
+		// Mock FindTokenById query
+		mock.ExpectQuery(`SELECT`).
+			WithArgs(tokenID).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "token", "created_at", "expired_at"}).
+				AddRow(tokenID, userID, "valid_token", time.Now().Unix(), almostExpired))
+
+		// Mock FindByID query
+		mock.ExpectQuery(`SELECT`).
+			WithArgs(userID).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "password", "created_at", "updated_at"}).
+				AddRow(userID, "John Doe", "john@example.com", "hashed_password", 1234567890, 1234567890))
+
+		ctx := context.Background()
+		result, err := uc.Verify(ctx, tokenID)
+
+		// Should succeed as token is still valid (not yet expired)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, userID, result.ID)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("should return error when token repository fails", func(t *testing.T) {
+		uc, mock, cleanup := setupAuthUseCase(t, nil, nil)
+		defer cleanup()
+
+		tokenID := 1
+
+		// Mock FindTokenById query with database error
+		mock.ExpectQuery(`SELECT`).
+			WithArgs(tokenID).
+			WillReturnError(errors.New("database connection lost"))
+
+		ctx := context.Background()
+		result, err := uc.Verify(ctx, tokenID)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Equal(t, fiber.ErrUnauthorized, err)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("should return error when user repository fails", func(t *testing.T) {
+		uc, mock, cleanup := setupAuthUseCase(t, nil, nil)
+		defer cleanup()
+
+		tokenID := 1
+		userID := 123
+		futureExpiry := time.Now().Add(24 * time.Hour).Unix()
+
+		// Mock FindTokenById query
+		mock.ExpectQuery(`SELECT`).
+			WithArgs(tokenID).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "token", "created_at", "expired_at"}).
+				AddRow(tokenID, userID, "valid_token", time.Now().Unix(), futureExpiry))
+
+		// Mock FindByID query with database error
+		mock.ExpectQuery(`SELECT`).
+			WithArgs(userID).
+			WillReturnError(errors.New("database connection lost"))
+
+		ctx := context.Background()
+		result, err := uc.Verify(ctx, tokenID)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Equal(t, fiber.ErrUnauthorized, err)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("should handle zero token ID", func(t *testing.T) {
+		uc, mock, cleanup := setupAuthUseCase(t, nil, nil)
+		defer cleanup()
+
+		tokenID := 0
+
+		// Mock FindTokenById query
+		mock.ExpectQuery(`SELECT`).
+			WithArgs(tokenID).
+			WillReturnError(sql.ErrNoRows)
+
+		ctx := context.Background()
+		result, err := uc.Verify(ctx, tokenID)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Equal(t, fiber.ErrUnauthorized, err)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("should handle negative token ID", func(t *testing.T) {
+		uc, mock, cleanup := setupAuthUseCase(t, nil, nil)
+		defer cleanup()
+
+		tokenID := -1
+
+		// Mock FindTokenById query
+		mock.ExpectQuery(`SELECT`).
+			WithArgs(tokenID).
+			WillReturnError(sql.ErrNoRows)
+
+		ctx := context.Background()
+		result, err := uc.Verify(ctx, tokenID)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Equal(t, fiber.ErrUnauthorized, err)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
 }
