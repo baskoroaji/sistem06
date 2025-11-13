@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"time"
@@ -74,25 +75,79 @@ func (r *UserRepository) CountByName(tx *sql.Tx, name string) (int, error) {
 	return totalName, err
 }
 
-func (r *UserRepository) FindByEmail(email string) (*entity.UserEntity, error) {
-	query :=
-		`
-	SELECT id, name, email, password, created_at, updated_at
-		FROM users
-		WHERE email = $1
+func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*entity.UserWithRole, error) {
+	query := `
+	SELECT 
+		u.id AS user_id,
+		u.email,
+		u.password,
+		r.id AS role_id,
+		r.name AS role_name,
+		p.name AS permission_name
+	FROM users u
+	JOIN user_roles ur ON ur.user_id = u.id
+	JOIN roles r ON r.id = ur.role_id
+	LEFT JOIN role_permissions rp ON rp.role_id = r.id
+	LEFT JOIN permissions p ON p.id = rp.permission_id
+	WHERE u.email = $1
 	`
-	row := r.DB.QueryRow(query, email)
 
-	var user entity.UserEntity
-	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	rows, err := r.DB.QueryContext(ctx, query, email)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("user not found")
-		}
 		return nil, err
 	}
+	defer rows.Close()
 
-	return &user, nil
+	var user *entity.UserWithRole
+	roleMap := make(map[int64]*entity.Role)
+
+	for rows.Next() {
+		var (
+			userID   int64
+			email    string
+			password string
+			roleID   sql.NullInt64
+			roleName sql.NullString
+			permName sql.NullString
+		)
+
+		if err := rows.Scan(&userID, &email, &password, &roleID, &roleName, &permName); err != nil {
+			return nil, err
+		}
+
+		if user == nil {
+			user = &entity.UserWithRole{
+				ID:       userID,
+				Email:    email,
+				Password: password,
+				RoleName: []entity.Role{},
+			}
+		}
+
+		if roleID.Valid {
+			role, exists := roleMap[roleID.Int64]
+			if !exists {
+				role = &entity.Role{
+					ID:          roleID.Int64,
+					Name:        roleName.String,
+					Permissions: []string{},
+				}
+				roleMap[roleID.Int64] = role
+			}
+
+			if permName.Valid && permName.String != "" {
+				role.Permissions = append(role.Permissions, permName.String)
+			}
+		}
+	}
+
+	// pindahkan map ke slice
+	for _, r := range roleMap {
+		user.RoleName = append(user.RoleName, *r)
+	}
+
+	return user, nil
+
 }
 
 func (r *UserRepository) FindByID(id int) (*entity.UserEntity, error) {
