@@ -14,7 +14,7 @@ type UserRepositoryInterface interface {
 	CreateUser(tx *sql.Tx, user *entity.UserEntity) error
 	CountById(tx *sql.Tx, id int) (int, error)
 	CountByName(tx *sql.Tx, name string) (int, error)
-	FindByEmail(email string) (*entity.UserEntity, error)
+	FindByEmail(ctx context.Context, email string) (*entity.UserWithRole, error)
 	FindByID(id int) (*entity.UserEntity, error)
 }
 type UserRepository struct {
@@ -77,17 +77,18 @@ func (r *UserRepository) CountByName(tx *sql.Tx, name string) (int, error) {
 
 func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*entity.UserWithRole, error) {
 	query := `
-	SELECT 
-		u.id AS user_id,
-		u.email,
-		u.password,
-		r.id AS role_id,
-		r.name AS role_name,
-		p.name AS permission_name
+			SELECT 
+	u.id AS user_id,
+	u.email,
+	u.password,
+	r.id AS role_id,
+	r.name AS role_name,
+	p.id AS permission_id,
+	p.name AS permission_name
 	FROM users u
 	JOIN user_roles ur ON ur.user_id = u.id
-	JOIN roles r ON r.id = ur.role_id
-	LEFT JOIN role_permissions rp ON rp.role_id = r.id
+	JOIN roles r ON r.id = ur.roles_id
+	LEFT JOIN roles_permissions rp ON rp.role_id = r.id
 	LEFT JOIN permissions p ON p.id = rp.permission_id
 	WHERE u.email = $1
 	`

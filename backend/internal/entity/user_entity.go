@@ -12,6 +12,7 @@ type UserEntity struct {
 type UserWithRole struct {
 	ID       int64
 	Email    string
+	Name     string
 	Password string
 	RoleID   int64
 	RoleName []Role

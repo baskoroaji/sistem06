@@ -1,10 +1,12 @@
 package model
 
 type UserResponse struct {
-	ID        int    `json:"id,omitempty"`
-	Name      string `json:"name,omitempty"`
-	CreatedAt int64  `json:"created_at,omitempty"`
-	UpdatedAt int64  `json:"updated_at,omitempty"`
+	ID        int      `json:"id,omitempty"`
+	Name      string   `json:"name,omitempty"`
+	Email     string   `json:"email,omitempty"`
+	Roles     []string `json:"roles,omitempty"`
+	CreatedAt int64    `json:"created_at,omitempty"`
+	UpdatedAt int64    `json:"updated_at,omitempty"`
 }
 type RegisterUserRequest struct {
 	Name     string `json:"name" validate:"required,max=100"`

@@ -1,11 +1,12 @@
 package usecase
 
 import (
+	"context"
 	"database/sql"
 
 	"backend-sistem06.com/internal/model"
+	"backend-sistem06.com/internal/model/converter"
 	"backend-sistem06.com/internal/repository"
-	"backend-sistem06.com/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/session"
@@ -31,30 +32,21 @@ func NewAuthUseCase(db *sql.DB, log *logrus.Logger, validate *validator.Validate
 	}
 }
 
-func (c *AuthUseCase) Login(ctx *fiber.Ctx, request *model.LoginUserRequest) (*model.LoginResponse, error) {
+func (c *AuthUseCase) Login(ctx context.Context, request *model.LoginUserRequest) (*model.UserResponse, error) {
 	if err := c.Validate.Struct(request); err != nil {
-		validationErrors := utils.ValidationError(err)
-
-		c.Log.Warnf("Validation failed: %+v", validationErrors)
-
-		return nil, fiber.NewError(fiber.StatusBadRequest, utils.FormatValidationErrors(validationErrors))
-
+		return nil, fiber.NewError(fiber.StatusBadRequest, "invalid request")
 	}
 
-	user, err := c.UserRepository.FindByEmail(request.Email)
+	user, err := c.UserRepository.FindByEmail(ctx, request.Email)
 	if err != nil {
-		c.Log.Warnf("Failed find user by email: %+v", err)
 		return nil, fiber.ErrUnauthorized
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
-		c.Log.Warn("Invalid password")
 		return nil, fiber.ErrUnauthorized
 	}
 
-	return &model.LoginResponse{
-		Message: sess.ID(),
-	}, nil
+	return converter.UserWithRoleToResponse(user), nil
 }
 
 // func (c *AuthUseCase) Verify(ctx context.Context, tokenID int) (*model.Auth, error) {
