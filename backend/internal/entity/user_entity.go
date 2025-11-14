@@ -10,16 +10,37 @@ type UserEntity struct {
 }
 
 type UserWithRole struct {
-	ID       int64
+	ID       int
 	Email    string
 	Name     string
 	Password string
-	RoleID   int64
-	RoleName []Role
+	Roles    []RolesWithPermissions
 }
 
 type Role struct {
-	ID          int64
+	ID   int
+	Name string
+}
+
+type Permissions struct {
+	ID   int
+	Name string
+}
+
+type RolesPermissions struct {
+	ID            int
+	RolesID       int
+	PermissionsID int
+}
+
+type UserRoles struct {
+	ID      int
+	UserID  int
+	RolesID int
+}
+
+type RolesWithPermissions struct {
+	ID          int
 	Name        string
 	Permissions []string
 }

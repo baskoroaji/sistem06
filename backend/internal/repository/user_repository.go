@@ -14,8 +14,9 @@ type UserRepositoryInterface interface {
 	CreateUser(tx *sql.Tx, user *entity.UserEntity) error
 	CountById(tx *sql.Tx, id int) (int, error)
 	CountByName(tx *sql.Tx, name string) (int, error)
-	FindByEmail(ctx context.Context, email string) (*entity.UserWithRole, error)
+	FindByEmail(ctx context.Context, email string) (*entity.UserEntity, error)
 	FindByID(id int) (*entity.UserEntity, error)
+	FindWithRoles(ctx context.Context, userid int) (*entity.UserWithRole, error)
 }
 type UserRepository struct {
 	DB  *sql.DB
@@ -75,80 +76,28 @@ func (r *UserRepository) CountByName(tx *sql.Tx, name string) (int, error) {
 	return totalName, err
 }
 
-func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*entity.UserWithRole, error) {
-	query := `
-			SELECT 
-	u.id AS user_id,
-	u.email,
-	u.password,
-	r.id AS role_id,
-	r.name AS role_name,
-	p.id AS permission_id,
-	p.name AS permission_name
-	FROM users u
-	JOIN user_roles ur ON ur.user_id = u.id
-	JOIN roles r ON r.id = ur.roles_id
-	LEFT JOIN roles_permissions rp ON rp.role_id = r.id
-	LEFT JOIN permissions p ON p.id = rp.permission_id
-	WHERE u.email = $1
-	`
+func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*entity.UserEntity, error) {
+	query := `SELECT id, name, email, password, created_at, updated_at 
+	          FROM users WHERE email = $1`
 
-	rows, err := r.DB.QueryContext(ctx, query, email)
+	var user entity.UserEntity
+	err := r.DB.QueryRowContext(ctx, query, email).Scan(
+		&user.ID,
+		&user.Name,
+		&user.Email,
+		&user.Password,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var user *entity.UserWithRole
-	roleMap := make(map[int64]*entity.Role)
-
-	for rows.Next() {
-		var (
-			userID   int64
-			email    string
-			password string
-			roleID   sql.NullInt64
-			roleName sql.NullString
-			permName sql.NullString
-		)
-
-		if err := rows.Scan(&userID, &email, &password, &roleID, &roleName, &permName); err != nil {
-			return nil, err
-		}
-
-		if user == nil {
-			user = &entity.UserWithRole{
-				ID:       userID,
-				Email:    email,
-				Password: password,
-				RoleName: []entity.Role{},
-			}
-		}
-
-		if roleID.Valid {
-			role, exists := roleMap[roleID.Int64]
-			if !exists {
-				role = &entity.Role{
-					ID:          roleID.Int64,
-					Name:        roleName.String,
-					Permissions: []string{},
-				}
-				roleMap[roleID.Int64] = role
-			}
-
-			if permName.Valid && permName.String != "" {
-				role.Permissions = append(role.Permissions, permName.String)
-			}
-		}
-	}
-
-	// pindahkan map ke slice
-	for _, r := range roleMap {
-		user.RoleName = append(user.RoleName, *r)
-	}
-
-	return user, nil
-
+	return &user, nil
 }
 
 func (r *UserRepository) FindByID(id int) (*entity.UserEntity, error) {
@@ -167,6 +116,93 @@ func (r *UserRepository) FindByID(id int) (*entity.UserEntity, error) {
 			return nil, fmt.Errorf("user not found")
 		}
 		return nil, err
+	}
+
+	return &user, nil
+}
+
+// Khusus untuk load roles & permissions setelah login
+func (r *UserRepository) FindWithRoles(ctx context.Context, userID int) (*entity.UserWithRole, error) {
+	// Query user basic info
+	userQuery := `SELECT id, name, email, password
+	              FROM users WHERE id = $1`
+
+	var user entity.UserWithRole
+	err := r.DB.QueryRowContext(ctx, userQuery, userID).Scan(
+		&user.ID,
+		&user.Name,
+		&user.Email,
+		&user.Password,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// Query roles & permissions
+	rolesQuery := `
+		SELECT 
+			r.id AS role_id,
+			r.name AS role_name,
+			p.name AS permission_name
+		FROM user_roles ur
+		JOIN roles r ON r.id = ur.roles_id
+		LEFT JOIN roles_permissions rp ON rp.role_id = r.id
+		LEFT JOIN permissions p ON p.id = rp.permission_id
+		WHERE ur.user_id = $1
+		ORDER BY r.id, p.name
+	`
+
+	rows, err := r.DB.QueryContext(ctx, rolesQuery, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	roleMap := make(map[int]*entity.RolesWithPermissions)
+	permissionSet := make(map[int]map[string]bool)
+
+	for rows.Next() {
+		var (
+			roleID   int
+			roleName string
+			permName sql.NullString
+		)
+
+		if err := rows.Scan(&roleID, &roleName, &permName); err != nil {
+			return nil, err
+		}
+
+		// Initialize role if not exists
+		if _, exists := roleMap[roleID]; !exists {
+			roleMap[roleID] = &entity.RolesWithPermissions{
+				ID:          roleID,
+				Name:        roleName,
+				Permissions: []string{},
+			}
+			permissionSet[roleID] = make(map[string]bool)
+		}
+
+		// Add permission if valid and unique
+		if permName.Valid && permName.String != "" {
+			if !permissionSet[roleID][permName.String] {
+				roleMap[roleID].Permissions = append(roleMap[roleID].Permissions, permName.String)
+				permissionSet[roleID][permName.String] = true
+			}
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Convert map to slice
+	user.Roles = make([]entity.RolesWithPermissions, 0, len(roleMap))
+	for _, role := range roleMap {
+		user.Roles = append(user.Roles, *role)
 	}
 
 	return &user, nil

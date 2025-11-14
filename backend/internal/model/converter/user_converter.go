@@ -7,28 +7,48 @@ import (
 
 func UserToResponse(user *entity.UserEntity) *model.UserResponse {
 	return &model.UserResponse{
-		ID:        user.ID,
-		Name:      user.Name,
-		Email:     user.Email,
+		ID:    user.ID,
+		Name:  user.Name,
+		Email: user.Email,
+
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}
 }
 
-func UserWithRoleToResponse(user *entity.UserWithRole) *model.UserResponse {
+func UserWithRolesToResponse(user *entity.UserWithRole) *model.UserResponse {
 	if user == nil {
 		return nil
 	}
 
-	var roles []string
-	for _, r := range user.RoleName {
-		roles = append(roles, r.Name)
+	// Convert roles
+	roles := make([]model.RoleResponse, len(user.Roles))
+	permissionSet := make(map[string]bool)
+
+	for i, role := range user.Roles {
+		roles[i] = model.RoleResponse{
+			ID:          role.ID,
+			Name:        role.Name,
+			Permissions: role.Permissions,
+		}
+
+		// Collect all unique permissions
+		for _, perm := range role.Permissions {
+			permissionSet[perm] = true
+		}
+	}
+
+	// Flatten permissions
+	permissions := make([]string, 0, len(permissionSet))
+	for perm := range permissionSet {
+		permissions = append(permissions, perm)
 	}
 
 	return &model.UserResponse{
-		ID:    int(user.ID),
-		Name:  user.Name,
-		Email: user.Email,
-		Roles: roles,
+		ID:          user.ID,
+		Name:        user.Name,
+		Email:       user.Email,
+		Roles:       roles,
+		Permissions: permissions,
 	}
 }

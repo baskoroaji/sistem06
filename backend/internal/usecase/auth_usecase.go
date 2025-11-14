@@ -46,7 +46,13 @@ func (c *AuthUseCase) Login(ctx context.Context, request *model.LoginUserRequest
 		return nil, fiber.ErrUnauthorized
 	}
 
-	return converter.UserWithRoleToResponse(user), nil
+	userWithRoles, err := c.UserRepository.FindWithRoles(ctx, user.ID)
+	if err != nil {
+		c.Log.Errorf("Failed to load roles: %v", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	return converter.UserWithRolesToResponse(userWithRoles), nil
 }
 
 // func (c *AuthUseCase) Verify(ctx context.Context, tokenID int) (*model.Auth, error) {
