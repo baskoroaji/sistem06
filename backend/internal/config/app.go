@@ -21,18 +21,18 @@ type BootstrapConfig struct {
 	Log       *logrus.Logger
 	DB        *sql.DB
 	Validator *validator.Validate
-	session   *session.Store
+	Session   *session.Store
 }
 
 func Bootstrap(config *BootstrapConfig) {
 	helloContoller := http.NewHelloController()
 
 	userRepository := repository.NewUserRepository(config.DB, config.Log)
-	sessionHandler := utils.NewSessionHandler(config.session, config.Log)
+	sessionHandler := utils.NewSessionHandler(config.Session, config.Log)
 	// authRepository := repository.NewTokenRepository(config.DB, config.Log)
 
 	userUseCase := usecase.NewUserUseCase(config.DB, config.Log, config.Validator, userRepository)
-	authUseCase := usecase.NewAuthUseCase(config.DB, config.Log, config.Validator, userRepository, config.session)
+	authUseCase := usecase.NewAuthUseCase(config.DB, config.Log, config.Validator, userRepository)
 
 	userController := http.NewUserController(userUseCase, config.Log)
 	authController := http.NewAuthController(authUseCase, config.Log, sessionHandler)

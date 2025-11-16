@@ -9,7 +9,6 @@ import (
 	"backend-sistem06.com/internal/repository"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/session"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -19,16 +18,14 @@ type AuthUseCase struct {
 	Log            *logrus.Logger
 	Validate       *validator.Validate
 	UserRepository repository.UserRepositoryInterface
-	Session        *session.Store
 }
 
-func NewAuthUseCase(db *sql.DB, log *logrus.Logger, validate *validator.Validate, userRepository repository.UserRepositoryInterface, session *session.Store) *AuthUseCase {
+func NewAuthUseCase(db *sql.DB, log *logrus.Logger, validate *validator.Validate, userRepository repository.UserRepositoryInterface) *AuthUseCase {
 	return &AuthUseCase{
 		DB:             db,
 		Log:            log,
 		Validate:       validate,
 		UserRepository: userRepository,
-		Session:        session,
 	}
 }
 

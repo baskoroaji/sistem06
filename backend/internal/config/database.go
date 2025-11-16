@@ -2,6 +2,7 @@ package config
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -10,22 +11,22 @@ import (
 )
 
 func NewPostgres(config *viper.Viper, log *logrus.Logger) *sql.DB {
-	URI := config.GetString("database.url")
-	// username := config.GetString("database.username")
-	// password := config.GetString("database.password")
-	// port := config.GetInt("database.port")
-	// host := config.GetString("database.host")
-	// dbname := config.GetString("database.name")
-	// dsn := fmt.Sprintf(
-	// 	"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-	// 	host,
-	// 	port,
-	// 	username,
-	// 	password,
-	// 	dbname,
-	// )
+	// URI := config.GetString("database.url")
+	username := config.GetString("database.username")
+	password := config.GetString("database.password")
+	port := config.GetInt("database.port")
+	host := config.GetString("database.host")
+	dbname := config.GetString("database.name")
+	dsn := fmt.Sprintf(
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		host,
+		port,
+		username,
+		password,
+		dbname,
+	)
 
-	db, err := sql.Open("postgres", URI)
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
 	}

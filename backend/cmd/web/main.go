@@ -12,6 +12,7 @@ func main() {
 	log := config.NewLogger(viperConfig)
 	db := config.NewPostgres(viperConfig, log)
 	validate := config.NewValidator(viperConfig)
+	sessionStore := config.NewSession(viperConfig, db, log)
 
 	config.Bootstrap(&config.BootstrapConfig{
 		App:       app,
@@ -19,6 +20,7 @@ func main() {
 		Validator: validate,
 		DB:        db,
 		Log:       log,
+		Session:   sessionStore,
 	})
 	webPort := viperConfig.GetInt("web.port")
 	err := app.Listen(fmt.Sprintf(":%d", webPort))
