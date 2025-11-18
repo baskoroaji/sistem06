@@ -134,3 +134,16 @@ func (s *SessionHandler) RefreshSession(ctx *fiber.Ctx) error {
 
 	return nil
 }
+
+func (s *SessionHandler) GetUserRole(ctx *fiber.Ctx) (string, error) {
+	sess, err := s.store.Get(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	if role, ok := sess.Get("role").(string); ok {
+		return role, nil
+	}
+
+	return "", nil
+}

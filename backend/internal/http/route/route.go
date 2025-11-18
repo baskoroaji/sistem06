@@ -2,6 +2,7 @@ package route
 
 import (
 	"backend-sistem06.com/internal/http"
+	"backend-sistem06.com/internal/http/middleware"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -11,14 +12,16 @@ type RouteConfig struct {
 	HelloController *http.HelloController
 	UserController  *http.UserController
 	AuthController  *http.AuthController
+	AuthMiddleware  *middleware.AuthMiddleware
 }
 
 func (c *RouteConfig) Setup() {
-	c.SetupGuestRoute()
+	c.AuthRoute()
 }
 
-func (c *RouteConfig) SetupGuestRoute() {
-	c.App.Get("/hello", c.HelloController.Hello)
-	c.App.Post("/api/register", c.UserController.Register)
-	c.App.Post("/api/login", c.AuthController.Login)
+func (c *RouteConfig) AuthRoute() {
+	auth := c.App.Group("/v1/api/auth")
+	// c.App.Get("/hello", c.HelloController.Hello)
+	auth.Post("/register", c.AuthMiddleware.RequireGuest(), c.UserController.Register)
+	auth.Post("/login", c.AuthMiddleware.RequireGuest(), c.AuthController.Login)
 }
