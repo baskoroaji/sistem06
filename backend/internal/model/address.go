@@ -3,10 +3,10 @@ package model
 type Address struct {
 	ID         int    `json:"id"`
 	Jalan      string `json:"jalan"`
-	RT         int    `json:"RT"`
-	RW         int    `json:"RW"`
+	RT         string `json:"RT"`
+	RW         string `json:"RW"`
 	Kota       string `json:"Kota"`
-	PostalCode int    `json:"PostalCode"`
+	PostalCode string `json:"PostalCode"`
 }
 
 type AddressRequest struct {
