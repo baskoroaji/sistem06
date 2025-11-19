@@ -56,11 +56,11 @@ func (m *AuthMiddleware) RequiredAuth() fiber.Handler {
 	}
 }
 
-func (m *AuthMiddleware) RequiredRoles (role string) fiber.Handler {
-	return func (c *fiber.Ctx) error  {
-		if !m.SessionHandler.IsAuthenticated(c) {
-			return fiber.ErrUnauthorized
-		}
-		if !m.SessionHandler.
-	}
-}
+// func (m *AuthMiddleware) RequiredRoles (role string) fiber.Handler {
+// 	return func (c *fiber.Ctx) error  {
+// 		if !m.SessionHandler.IsAuthenticated(c) {
+// 			return fiber.ErrUnauthorized
+// 		}
+// 		if !m.SessionHandler.
+// 	}
+// }

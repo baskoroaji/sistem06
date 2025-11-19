@@ -22,6 +22,6 @@ func (c *RouteConfig) Setup() {
 func (c *RouteConfig) AuthRoute() {
 	auth := c.App.Group("/v1/api/auth")
 	// c.App.Get("/hello", c.HelloController.Hello)
-	auth.Post("/register", c.AuthMiddleware.RequireGuest(), c.UserController.Register)
-	auth.Post("/login", c.AuthMiddleware.RequireGuest(), c.AuthController.Login)
+	auth.Post("/register", c.UserController.Register)
+	auth.Post("/login", c.AuthController.Login)
 }

@@ -38,17 +38,10 @@ func UserWithRolesToResponse(user *entity.UserWithRole) *model.UserResponse {
 		}
 	}
 
-	// Flatten permissions
-	permissions := make([]string, 0, len(permissionSet))
-	for perm := range permissionSet {
-		permissions = append(permissions, perm)
-	}
-
 	return &model.UserResponse{
-		ID:          user.ID,
-		Name:        user.Name,
-		Email:       user.Email,
-		Roles:       roles,
-		Permissions: permissions,
+		ID:    user.ID,
+		Name:  user.Name,
+		Email: user.Email,
+		Roles: roles,
 	}
 }
