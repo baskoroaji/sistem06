@@ -19,8 +19,11 @@ github.com/go-viper/mapstructure/v2 v2.4.0 h1:EBsztssimR/CONLSZZ04E8qAkxNYq4Qp9L
 github.com/go-viper/mapstructure/v2 v2.4.0/go.mod h1:oJDH3BJKyqBA2TXFhDsKDGDTlndYOZ6rGS0BRZIxGhM=
 github.com/gofiber/fiber/v2 v2.52.9 h1:YjKl5DOiyP3j0mO61u3NTmK7or8GzzWzCFzkboyP5cw=
 github.com/gofiber/fiber/v2 v2.52.9/go.mod h1:YEcBbO/FB+5M1IZNBP9FO3J9281zgPAreiI1oqg8nDw=
+github.com/gofiber/storage/memory v1.3.4 h1:VxTq8Vrdvk73VsfvtTgc3LjXClbBrHXanzEo+w0cpgo=
+github.com/gofiber/storage/memory v1.3.4/go.mod h1:pYsCUle/+4exGfsG7IlpmFYBVmNntP8OIDBvmABU8PE=
 github.com/gofiber/storage/postgres/v3 v3.3.0 h1:aCXQifuYHk9YfWU3RJbR3wII4Ev2/L8/tAvOvFf2qeM=
 github.com/gofiber/storage/postgres/v3 v3.3.0/go.mod h1:OyNQORDQ8SwudBc1biXy4Jo2UPKvqk3caq9/6+15iLs=
+github.com/gofiber/utils v1.0.1/go.mod h1:pacRFtghAE3UoknMOUiXh2Io/nLWSUHtQCi/3QASsOc=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/gorilla/securecookie v1.1.2 h1:YCIWL56dvtr73r6715mJs5ZvhtnY73hBvEF8kXD8ePA=
