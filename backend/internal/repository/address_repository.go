@@ -50,3 +50,29 @@ func (r *AddressRepository) CreateAddress(tx *sql.Tx, address *entity.Address) e
 	r.Log.Infof("address added successfully with ID: %d", address.ID)
 	return nil
 }
+
+func (r *AddressRepository) UpdateAddress(tx *sql.Tx, address *entity.Address) error {
+	now := time.Now().Unix()
+	query :=
+		`
+	INSERT INTO address (jalan, rt, rw, kota, postal_code, created_at, updated_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7)
+	RETURNING id
+	`
+
+	var row *sql.Row
+
+	if tx != nil {
+		row = tx.QueryRow(query, address.Jalan, address.RT, address.RW, address.Kota, address.PostalCode, now, now)
+	} else {
+		row = r.DB.QueryRow(query, address.Jalan, address.RT, address.RW, address.Kota, address.PostalCode, now, now)
+	}
+
+	err := row.Scan(&address.ID)
+	if err != nil {
+		r.Log.Errorf("failed to create address: %v", err)
+		return fmt.Errorf("failed to create address: %v", err)
+	}
+	r.Log.Infof("address added successfully with ID: %d", address.ID)
+	return nil
+}
