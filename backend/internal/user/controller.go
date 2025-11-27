@@ -1,15 +1,13 @@
-package http
+package User
 
 import (
-	"backend-sistem06.com/internal/model"
-	"backend-sistem06.com/internal/usecase"
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
 )
 
 type UserController struct {
 	Log     *logrus.Logger
-	UseCase *usecase.UserUseCase
+	UseCase *UserUseCase
 }
 
 func NewUserController(useCase *usecase.UserUseCase, logger *logrus.Logger) *UserController {

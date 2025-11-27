@@ -1,4 +1,4 @@
-package model
+package User
 
 type UserResponse struct {
 	ID        int            `json:"id,omitempty"`
@@ -12,15 +12,6 @@ type RegisterUserRequest struct {
 	Name     string `json:"name" validate:"required,max=100"`
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=8"`
-}
-
-type LoginUserRequest struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=8,max=100"`
-}
-
-type LoginResponse struct {
-	Message string `json:"message,omitempty"`
 }
 type VerifyUserRequest struct {
 	Token string `validate:"required,max=100"`

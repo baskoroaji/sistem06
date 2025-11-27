@@ -1,4 +1,4 @@
-package entity
+package User
 
 type UserEntity struct {
 	ID        int

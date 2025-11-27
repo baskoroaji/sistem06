@@ -1,4 +1,4 @@
-package converter
+package User
 
 import (
 	"backend-sistem06.com/internal/entity"
