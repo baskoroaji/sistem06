@@ -1,4 +1,4 @@
-package User
+package user
 
 import (
 	"github.com/gofiber/fiber/v2"
@@ -10,7 +10,7 @@ type UserController struct {
 	UseCase *UserUseCase
 }
 
-func NewUserController(useCase *usecase.UserUseCase, logger *logrus.Logger) *UserController {
+func NewUserController(useCase *UserUseCase, logger *logrus.Logger) *UserController {
 	return &UserController{
 		Log:     logger,
 		UseCase: useCase,
@@ -18,7 +18,7 @@ func NewUserController(useCase *usecase.UserUseCase, logger *logrus.Logger) *Use
 }
 
 func (c *UserController) Register(ctx *fiber.Ctx) error {
-	request := new(model.RegisterUserRequest)
+	request := new(RegisterUserRequest)
 	err := ctx.BodyParser(request)
 	if err != nil {
 		c.Log.Warnf("Failed to parse request body : %+v", err)
