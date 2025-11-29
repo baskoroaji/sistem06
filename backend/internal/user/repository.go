@@ -19,7 +19,8 @@ type UserRepositoryInterface interface {
 	FindWithRoles(ctx context.Context, userid int) (*entity.UserWithRole, error)
 }
 type UserRepository struct {
-	DB  *sql.DB
+	DB *sql.DB
+	queries
 	Log *logrus.Logger
 }
 
