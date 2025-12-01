@@ -1,4 +1,4 @@
-package entity
+package address
 
 type Address struct {
 	ID         int

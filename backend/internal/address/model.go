@@ -1,4 +1,4 @@
-package model
+package address
 
 import (
 	"regexp"
@@ -6,7 +6,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type Address struct {
+type AddressEntity struct {
 	ID         int    `json:"id"`
 	Jalan      string `json:"jalan"`
 	RT         string `json:"RT"`

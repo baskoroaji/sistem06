@@ -1,4 +1,4 @@
-package http
+package address
 
 import (
 	"backend-sistem06.com/internal/model"

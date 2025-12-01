@@ -9,7 +9,7 @@ import (
 func NewValidator(viper *viper.Viper) *validator.Validate {
 	validate := validator.New()
 
-	validate.RegisterValidation("RT_RW", utils.CustomRtRwCodeValidation)
+	validate.RegisterValidation("RT_RW")
 	validate.RegisterValidation("postal_code", utils.CustomPostalCodeValidation)
 	return validate
 }
