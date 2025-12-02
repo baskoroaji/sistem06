@@ -1,7 +1,7 @@
 package config
 
 import (
-	"backend-sistem06.com/utils"
+	"backend-sistem06.com/internal/validation"
 	"github.com/go-playground/validator/v10"
 	"github.com/spf13/viper"
 )
@@ -9,7 +9,7 @@ import (
 func NewValidator(viper *viper.Viper) *validator.Validate {
 	validate := validator.New()
 
-	validate.RegisterValidation("RT_RW")
-	validate.RegisterValidation("postal_code", utils.CustomPostalCodeValidation)
+	validate.RegisterValidation("RT_RW", validation.CustomRtRwCodeValidation)
+	validate.RegisterValidation("postal_code", validation.CustomPostalCodeValidation)
 	return validate
 }

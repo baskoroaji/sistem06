@@ -1,18 +1,17 @@
 package address
 
 import (
-	"backend-sistem06.com/internal/model"
-	"backend-sistem06.com/internal/usecase"
+	"backend-sistem06.com/pkg"
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
 )
 
 type AddressController struct {
 	Log     *logrus.Logger
-	UseCase *usecase.AddressUseCase
+	UseCase *AddressUseCase
 }
 
-func NewAddressController(usecase *usecase.AddressUseCase, log *logrus.Logger) *AddressController {
+func NewAddressController(usecase *AddressUseCase, log *logrus.Logger) *AddressController {
 	return &AddressController{
 		Log:     log,
 		UseCase: usecase,
@@ -20,7 +19,7 @@ func NewAddressController(usecase *usecase.AddressUseCase, log *logrus.Logger) *
 }
 
 func (c *AddressController) Create(ctx *fiber.Ctx) error {
-	request := new(model.AddressRequest)
+	request := new(AddressRequest)
 	err := ctx.BodyParser(request)
 	if err != nil {
 		c.Log.Warnf("Failed to parse request body : %+v", err)
@@ -32,5 +31,5 @@ func (c *AddressController) Create(ctx *fiber.Ctx) error {
 		c.Log.Warnf("Failed to create address: %+v", err)
 		return err
 	}
-	return ctx.JSON(model.WebResponse[*model.Address]{Data: res})
+	return ctx.JSON(pkg.WebResponse[*Address]{Data: res})
 }

@@ -1,4 +1,4 @@
-package user
+package address
 
 import (
 	"fmt"
@@ -7,10 +7,9 @@ import (
 )
 
 var Messages = map[string]string{
-	"required": "%s is required",
-	"email":    "%s must be a valid email address",
-	"min":      "%s must be at least %s characters",
-	"max":      "%s must be at most %s characters",
+	"required":    "%s is required",
+	"postal_code": "%s must be exact %s characters",
+	"RT_RW":       "%s must be exact %s characters",
 }
 
 func ValidationError(err error) map[string]string {

@@ -6,8 +6,6 @@ import (
 
 	"backend-sistem06.com/internal/entity"
 	"backend-sistem06.com/internal/model"
-	"backend-sistem06.com/internal/model/converter"
-	"backend-sistem06.com/internal/repository"
 	"backend-sistem06.com/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"

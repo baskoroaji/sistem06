@@ -1,4 +1,4 @@
-package http
+package auth
 
 import (
 	"backend-sistem06.com/internal/model"
