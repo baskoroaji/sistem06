@@ -1,4 +1,4 @@
-package address
+package dto
 
 type AddressEntity struct {
 	ID         int    `json:"id"`
