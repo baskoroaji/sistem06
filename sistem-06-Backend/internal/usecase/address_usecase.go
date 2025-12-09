@@ -1,4 +1,4 @@
-package address
+package usecase
 
 import (
 	"context"
