@@ -1,4 +1,4 @@
-module backend-sistem06.com
+module sistem-06-Backend
 
 go 1.25.1
 

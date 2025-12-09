@@ -5,10 +5,9 @@ import (
 	"database/sql"
 	"strings"
 
-	"backend-sistem06.com/internal/entity"
-	"backend-sistem06.com/internal/model"
-	"backend-sistem06.com/internal/model/converter"
-	"backend-sistem06.com/internal/repository"
+	"sistem-06-Backend/internal/domain"
+	"sistem-06-Backend/internal/repository"
+
 	"backend-sistem06.com/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -20,7 +19,7 @@ type UserUseCase struct {
 	DB             *sql.DB
 	Log            *logrus.Logger
 	validate       *validator.Validate
-	UserRepository repository.UserRepositoryInterface
+	UserRepository *domain.UserRepository
 }
 
 func NewUserUseCase(db *sql.DB, log *logrus.Logger, validate *validator.Validate, userRepository repository.UserRepositoryInterface) *UserUseCase {

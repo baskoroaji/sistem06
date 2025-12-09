@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
-	"backend-sistem06.com/internal/entity"
-	"backend-sistem06.com/internal/model"
+	"sistem-06-Backend/internal/domain"
+
 	"backend-sistem06.com/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -16,10 +16,10 @@ type AddressUseCase struct {
 	DB                *sql.DB
 	Log               *logrus.Logger
 	Validate          *validator.Validate
-	AddressRepository repository.AddressRepositoryInterface
+	AddressRepository domain.AddressRepository
 }
 
-func NewAddressUseCase(db *sql.DB, log *logrus.Logger, validate *validator.Validate, addressRepository repository.AddressRepositoryInterface) *AddressUseCase {
+func NewAddressUseCase(db *sql.DB, log *logrus.Logger, validate *validator.Validate, addressRepository domain.AddressRepository) *AddressUseCase {
 	return &AddressUseCase{
 		DB:                db,
 		Log:               log,
