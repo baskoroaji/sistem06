@@ -1,16 +1,20 @@
 package http
 
 import (
+	"sistem-06-Backend/internal/dto"
+	"sistem-06-Backend/internal/usecase"
+	"sistem-06-Backend/pkg"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
 )
 
 type UserController struct {
 	Log     *logrus.Logger
-	UseCase *UserUseCase
+	UseCase *usecase.UserUseCase
 }
 
-func NewUserController(useCase *UserUseCase, logger *logrus.Logger) *UserController {
+func NewUserController(useCase *usecase.UserUseCase, logger *logrus.Logger) *UserController {
 	return &UserController{
 		Log:     logger,
 		UseCase: useCase,
@@ -18,7 +22,7 @@ func NewUserController(useCase *UserUseCase, logger *logrus.Logger) *UserControl
 }
 
 func (c *UserController) Register(ctx *fiber.Ctx) error {
-	request := new(RegisterUserRequest)
+	request := new(*dto.RegisterUserRequest)
 	err := ctx.BodyParser(request)
 	if err != nil {
 		c.Log.Warnf("Failed to parse request body : %+v", err)
@@ -31,5 +35,5 @@ func (c *UserController) Register(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	return ctx.JSON(model.WebResponse[*model.UserResponse]{Data: response})
+	return ctx.JSON(pkg.WebResponse[*dto.UserResponse]{Data: response})
 }
