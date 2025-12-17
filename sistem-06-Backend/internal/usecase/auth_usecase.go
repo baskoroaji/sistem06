@@ -1,12 +1,12 @@
-package auth
+package usecase
 
 import (
 	"context"
 	"database/sql"
 
-	"backend-sistem06.com/internal/model"
-	"backend-sistem06.com/internal/model/converter"
-	"backend-sistem06.com/internal/repository"
+	"sistem-06-Backend/internal/domain"
+	"sistem-06-Backend/internal/dto"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
@@ -17,10 +17,10 @@ type AuthUseCase struct {
 	DB             *sql.DB
 	Log            *logrus.Logger
 	Validate       *validator.Validate
-	UserRepository repository.UserRepositoryInterface
+	UserRepository domain.UserRepository
 }
 
-func NewAuthUseCase(db *sql.DB, log *logrus.Logger, validate *validator.Validate, userRepository repository.UserRepositoryInterface) *AuthUseCase {
+func NewAuthUseCase(db *sql.DB, log *logrus.Logger, validate *validator.Validate, userRepository domain.AddressRepository) *AuthUseCase {
 	return &AuthUseCase{
 		DB:             db,
 		Log:            log,
@@ -29,7 +29,7 @@ func NewAuthUseCase(db *sql.DB, log *logrus.Logger, validate *validator.Validate
 	}
 }
 
-func (c *AuthUseCase) Login(ctx context.Context, request *model.LoginUserRequest) (*model.UserResponse, error) {
+func (c *AuthUseCase) Login(ctx context.Context, request *dto.UserLoginRequest) (*model.UserResponse, error) {
 	if err := c.Validate.Struct(request); err != nil {
 		return nil, fiber.NewError(fiber.StatusBadRequest, "invalid request")
 	}

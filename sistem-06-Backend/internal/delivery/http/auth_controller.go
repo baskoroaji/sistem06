@@ -1,9 +1,8 @@
-package auth
+package http
 
 import (
-	"backend-sistem06.com/internal/model"
-	"backend-sistem06.com/internal/usecase"
-	"backend-sistem06.com/utils"
+	"sistem-06-Backend/internal/usecase"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
 )

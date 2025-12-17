@@ -6,6 +6,6 @@ type Role struct {
 }
 
 type RolesWithPermissions struct {
-	Role
+	Roles       string
 	Permissions []string
 }
