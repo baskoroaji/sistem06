@@ -1,17 +1,21 @@
 package http
 
 import (
-	"backend-sistem06.com/pkg"
+	"sistem-06-Backend/internal/dto"
+	"sistem-06-Backend/internal/usecase"
+
+	"sistem-06-Backend/pkg"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
 )
 
 type AddressController struct {
 	Log     *logrus.Logger
-	UseCase *AddressUseCase
+	UseCase *usecase.AddressUseCase
 }
 
-func NewAddressController(usecase *AddressUseCase, log *logrus.Logger) *AddressController {
+func NewAddressController(usecase *usecase.AddressUseCase, log *logrus.Logger) *AddressController {
 	return &AddressController{
 		Log:     log,
 		UseCase: usecase,
@@ -19,7 +23,7 @@ func NewAddressController(usecase *AddressUseCase, log *logrus.Logger) *AddressC
 }
 
 func (c *AddressController) Create(ctx *fiber.Ctx) error {
-	request := new(AddressRequest)
+	request := new(*dto.AddressRequest)
 	err := ctx.BodyParser(request)
 	if err != nil {
 		c.Log.Warnf("Failed to parse request body : %+v", err)
@@ -31,5 +35,5 @@ func (c *AddressController) Create(ctx *fiber.Ctx) error {
 		c.Log.Warnf("Failed to create address: %+v", err)
 		return err
 	}
-	return ctx.JSON(pkg.WebResponse[*Address]{Data: res})
+	return ctx.JSON(pkg.WebResponse[*dto.AddressEntity]{Data: res})
 }
