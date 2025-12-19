@@ -3,12 +3,11 @@
 //   sqlc v1.30.0
 // source: address.sql
 
-package database
+package sqlc
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
+	"database/sql"
 )
 
 const CreateAddress = `-- name: CreateAddress :one
@@ -26,7 +25,7 @@ type CreateAddressParams struct {
 }
 
 func (q *Queries) CreateAddress(ctx context.Context, arg CreateAddressParams) (int32, error) {
-	row := q.db.QueryRow(ctx, CreateAddress,
+	row := q.db.QueryRowContext(ctx, CreateAddress,
 		arg.Jalan,
 		arg.Rt,
 		arg.Rw,
@@ -43,7 +42,7 @@ SELECT id, jalan, rt, rw, kota, postal_code FROM address WHERE id = $1
 `
 
 func (q *Queries) FindAdressByID(ctx context.Context, id int32) (*Address, error) {
-	row := q.db.QueryRow(ctx, FindAdressByID, id)
+	row := q.db.QueryRowContext(ctx, FindAdressByID, id)
 	var i Address
 	err := row.Scan(
 		&i.ID,
@@ -68,16 +67,16 @@ WHERE id = $1
 `
 
 type UpdateAddressParams struct {
-	ID         int32       `json:"id"`
-	Jalan      pgtype.Text `json:"jalan"`
-	Rt         pgtype.Text `json:"rt"`
-	Rw         pgtype.Text `json:"rw"`
-	Kota       pgtype.Text `json:"kota"`
-	PostalCode pgtype.Text `json:"postal_code"`
+	ID         int32          `json:"id"`
+	Jalan      sql.NullString `json:"jalan"`
+	Rt         sql.NullString `json:"rt"`
+	Rw         sql.NullString `json:"rw"`
+	Kota       sql.NullString `json:"kota"`
+	PostalCode sql.NullString `json:"postal_code"`
 }
 
 func (q *Queries) UpdateAddress(ctx context.Context, arg UpdateAddressParams) error {
-	_, err := q.db.Exec(ctx, UpdateAddress,
+	_, err := q.db.ExecContext(ctx, UpdateAddress,
 		arg.ID,
 		arg.Jalan,
 		arg.Rt,

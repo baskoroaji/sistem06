@@ -1,4 +1,4 @@
-package domain
+package entity
 
 type Permissions struct {
 	ID   int
