@@ -1,7 +1,9 @@
 package http
 
 import (
+	"sistem-06-Backend/internal/dto"
 	"sistem-06-Backend/internal/usecase"
+	"sistem-06-Backend/pkg"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
@@ -10,10 +12,10 @@ import (
 type AuthController struct {
 	Log     *logrus.Logger
 	UseCase *usecase.AuthUseCase
-	Session *utils.SessionHandler
+	Session *pkg.SessionHandler
 }
 
-func NewAuthController(useCase *usecase.AuthUseCase, log *logrus.Logger, session *utils.SessionHandler) *AuthController {
+func NewAuthController(useCase *usecase.AuthUseCase, log *logrus.Logger, session *pkg.SessionHandler) *AuthController {
 	return &AuthController{
 		Log:     log,
 		UseCase: useCase,
@@ -22,7 +24,7 @@ func NewAuthController(useCase *usecase.AuthUseCase, log *logrus.Logger, session
 }
 
 func (c *AuthController) Login(ctx *fiber.Ctx) error {
-	request := new(model.LoginUserRequest)
+	request := new(dto.UserLoginRequest)
 	err := ctx.BodyParser(request)
 	if err != nil {
 		c.Log.Warnf("Failed to parse request body : %+v", err)
@@ -39,6 +41,6 @@ func (c *AuthController) Login(ctx *fiber.Ctx) error {
 		return fiber.ErrInternalServerError
 	}
 
-	return ctx.JSON(model.WebResponse[*model.UserResponse]{Data: response})
+	return ctx.JSON(pkg.WebResponse[*dto.UserResponse]{Data: response})
 
 }

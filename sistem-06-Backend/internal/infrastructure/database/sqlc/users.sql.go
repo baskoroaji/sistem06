@@ -3,12 +3,10 @@
 //   sqlc v1.30.0
 // source: users.sql
 
-package database
+package sqlc
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const CountUserByID = `-- name: CountUserByID :one
@@ -16,7 +14,7 @@ SELECT COUNT(*) FROM users WHERE id = $1
 `
 
 func (q *Queries) CountUserByID(ctx context.Context, id int32) (int64, error) {
-	row := q.db.QueryRow(ctx, CountUserByID, id)
+	row := q.db.QueryRowContext(ctx, CountUserByID, id)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -27,7 +25,7 @@ SELECT COUNT(*) FROM users WHERE name = $1
 `
 
 func (q *Queries) CountUserByName(ctx context.Context, name string) (int64, error) {
-	row := q.db.QueryRow(ctx, CountUserByName, name)
+	row := q.db.QueryRowContext(ctx, CountUserByName, name)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -48,7 +46,7 @@ type CreateUserParams struct {
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int32, error) {
-	row := q.db.QueryRow(ctx, CreateUser,
+	row := q.db.QueryRowContext(ctx, CreateUser,
 		arg.Name,
 		arg.Email,
 		arg.Password,
@@ -66,7 +64,7 @@ FROM users WHERE email = $1
 `
 
 func (q *Queries) FindUserByEmail(ctx context.Context, email string) (*User, error) {
-	row := q.db.QueryRow(ctx, FindUserByEmail, email)
+	row := q.db.QueryRowContext(ctx, FindUserByEmail, email)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -86,7 +84,7 @@ WHERE id = $1
 `
 
 func (q *Queries) FindUserByID(ctx context.Context, id int32) (*User, error) {
-	row := q.db.QueryRow(ctx, FindUserByID, id)
+	row := q.db.QueryRowContext(ctx, FindUserByID, id)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -97,43 +95,4 @@ func (q *Queries) FindUserByID(ctx context.Context, id int32) (*User, error) {
 		&i.UpdatedAt,
 	)
 	return &i, err
-}
-
-const FindUserRolesWithPermissions = `-- name: FindUserRolesWithPermissions :many
-SELECT 
-r.id AS role_id,
-r.name AS role_name,
-p.name AS permission_name
-FROM user_roles ur
-JOIN roles r ON r.id = ur.roles_id
-LEFT JOIN roles_permissions rp ON rp.role_id = r.id
-LEFT JOIN permissions p ON p.id = rp.permission_id
-WHERE ur.user_id = $1
-ORDER BY r.id, p.name
-`
-
-type FindUserRolesWithPermissionsRow struct {
-	RoleID         int32       `json:"role_id"`
-	RoleName       string      `json:"role_name"`
-	PermissionName pgtype.Text `json:"permission_name"`
-}
-
-func (q *Queries) FindUserRolesWithPermissions(ctx context.Context, userID int64) ([]*FindUserRolesWithPermissionsRow, error) {
-	rows, err := q.db.Query(ctx, FindUserRolesWithPermissions, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []*FindUserRolesWithPermissionsRow{}
-	for rows.Next() {
-		var i FindUserRolesWithPermissionsRow
-		if err := rows.Scan(&i.RoleID, &i.RoleName, &i.PermissionName); err != nil {
-			return nil, err
-		}
-		items = append(items, &i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }

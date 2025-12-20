@@ -2,13 +2,14 @@
 // versions:
 //   sqlc v1.30.0
 
-package database
+package sqlc
 
 import (
 	"context"
 )
 
 type Querier interface {
+	AssignRoleToUser(ctx context.Context, arg AssignRoleToUserParams) error
 	CountUserByID(ctx context.Context, id int32) (int64, error)
 	CountUserByName(ctx context.Context, name string) (int64, error)
 	CreateAddress(ctx context.Context, arg CreateAddressParams) (int32, error)
@@ -16,7 +17,11 @@ type Querier interface {
 	FindAdressByID(ctx context.Context, id int32) (*Address, error)
 	FindUserByEmail(ctx context.Context, email string) (*User, error)
 	FindUserByID(ctx context.Context, id int32) (*User, error)
-	FindUserRolesWithPermissions(ctx context.Context, userID int64) ([]*FindUserRolesWithPermissionsRow, error)
+	GetPermissionsByRoleID(ctx context.Context, roleID int64) ([]*Permission, error)
+	GetPermissionsByUserID(ctx context.Context, userID int64) ([]*Permission, error)
+	GetRolesByUserID(ctx context.Context, userID int64) ([]*Role, error)
+	GetRolesWithPermissionsByUserID(ctx context.Context, userID int64) ([]*GetRolesWithPermissionsByUserIDRow, error)
+	RemoveRoleFromUser(ctx context.Context, arg RemoveRoleFromUserParams) error
 	UpdateAddress(ctx context.Context, arg UpdateAddressParams) error
 }
 
