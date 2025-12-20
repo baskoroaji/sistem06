@@ -4,5 +4,5 @@ type User struct {
 	ID    int
 	Name  string
 	Email string
-	Role  []Role
+	Role  Role
 }

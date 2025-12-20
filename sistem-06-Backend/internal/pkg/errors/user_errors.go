@@ -1,4 +1,4 @@
-package user
+package errors
 
 import (
 	"fmt"
@@ -6,14 +6,14 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-var Messages = map[string]string{
+var UserErrorMessages = map[string]string{
 	"required": "%s is required",
 	"email":    "%s must be a valid email address",
 	"min":      "%s must be at least %s characters",
 	"max":      "%s must be at most %s characters",
 }
 
-func ValidationError(err error) map[string]string {
+func UserValidationError(err error) map[string]string {
 	if err == nil {
 		return nil
 	}
@@ -21,7 +21,7 @@ func ValidationError(err error) map[string]string {
 	if validationErrs, ok := err.(validator.ValidationErrors); ok {
 		errors := make(map[string]string)
 		for _, fe := range validationErrs {
-			template := Messages[fe.Tag()]
+			template := UserErrorMessages[fe.Tag()]
 			if template == "" {
 				template = "%s is invalid"
 			}
@@ -37,7 +37,7 @@ func ValidationError(err error) map[string]string {
 	return nil
 }
 
-func FormatValidationErrors(errs map[string]string) string {
+func UserFormatValidationErrors(errs map[string]string) string {
 	msg := "{"
 	for field, err := range errs {
 		msg += fmt.Sprintf("\"%s\": \"%s\",", field, err)
