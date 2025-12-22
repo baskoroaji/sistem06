@@ -5,51 +5,39 @@ import (
 	"database/sql"
 	"strings"
 
-	"sistem-06-Backend/internal/domain"
-	"sistem-06-Backend/internal/repository"
+	"sistem-06-Backend/internal/domain/entity"
+	"sistem-06-Backend/internal/domain/ports"
+	"sistem-06-Backend/internal/dto"
+	"sistem-06-Backend/internal/pkg/errors"
 
-	"backend-sistem06.com/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserUseCase struct {
-	DB             *sql.DB
-	Log            *logrus.Logger
-	validate       *validator.Validate
-	UserRepository *domain.UserRepository
+type userUseCase struct {
+	DB       *sql.DB
+	Log      *logrus.Logger
+	Validate *validator.Validate
+	Repo     ports.UserRepository
 }
 
-func NewUserUseCase(db *sql.DB, log *logrus.Logger, validate *validator.Validate, userRepository repository.UserRepositoryInterface) *UserUseCase {
-	return &UserUseCase{
-		DB:             db,
-		Log:            log,
-		validate:       validate,
-		UserRepository: userRepository,
+func NewUserUseCase(db *sql.DB, log *logrus.Logger, Validate *validator.Validate, repo ports.UserRepository) *userUseCase {
+	return &userUseCase{
+		Log:      log,
+		Validate: Validate,
+		Repo:     repo,
 	}
 }
 
-func (c *UserUseCase) Create(ctx context.Context, request *model.RegisterUserRequest) (*model.UserResponse, error) {
-	tx, err := c.DB.BeginTx(ctx, nil)
-	if err != nil {
-		c.Log.Warnf("Failed to begin transaction: %+v", err)
-
-		if err == context.Canceled || err == context.DeadlineExceeded {
-			return nil, fiber.NewError(fiber.StatusRequestTimeout, "request timeout or canceled")
-		}
-
-		return nil, fiber.ErrInternalServerError
-	}
-	defer tx.Rollback()
-
-	if err := c.validate.Struct(request); err != nil {
-		validationErrors := utils.ValidationError(err)
+func (c *userUseCase) Create(ctx context.Context, request *dto.RegisterUserRequest) (*dto.UserResponse, error) {
+	if err := c.Validate.Struct(request); err != nil {
+		validationErrors := errors.ValidationError(err, errors.UserErrorMessages)
 		c.Log.Warnf("Validation failed: %+v", validationErrors)
 
 		// Return response error yang bisa dibaca frontend
-		return nil, fiber.NewError(fiber.StatusBadRequest, utils.FormatValidationErrors(validationErrors))
+		return nil, fiber.NewError(fiber.StatusBadRequest, errors.FormatValidationErrors(validationErrors))
 	}
 
 	password, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
@@ -58,7 +46,7 @@ func (c *UserUseCase) Create(ctx context.Context, request *model.RegisterUserReq
 		return nil, fiber.ErrInternalServerError
 	}
 
-	user := &entity.UserEntity{
+	user := &entity.User{
 		Name:     request.Name,
 		Email:    request.Email,
 		Password: string(password),
